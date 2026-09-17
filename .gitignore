@@ -1,0 +1,47 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.idea/
+build/
+dist/
+*.spec
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# PyCharm
+.idea/
+
+# Environment / secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Database
+*.sql
+*.sqlite
+*.db
+
+# Build files
+build/
+dist/
+*.spec
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
