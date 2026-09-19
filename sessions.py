@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
+from datetime import datetime
 
 from database import get_connection
 
@@ -287,17 +288,6 @@ class SessionsWindow:
     # ==========================================================
 
     def start_session(self):
-
-        # ------------------------------------------------------
-        # INFORMATION MESSAGE
-        # ------------------------------------------------------
-
-        messagebox.showinfo(
-            "Authorized Session",
-            "This module records an authorized remote session.\n\n"
-            "The actual RDP/SSH/VPN connection should use the "
-            "organization's approved remote-access client or gateway."
-        )
 
         # ------------------------------------------------------
         # CREATE DIALOG
@@ -588,17 +578,19 @@ class SessionsWindow:
                     )
                 )
 
+                session_id = cursor.lastrowid
                 connection.commit()
 
-                messagebox.showinfo(
-                    "Session Started",
-                    "Authorized remote session recorded successfully.",
-                    parent=dialog
-                )
-
+                # Keep the session dialog from flashing away.
                 dialog.destroy()
-
                 self.load_sessions()
+
+                # Show the connection interface.
+                self.show_connection_window(
+                    session_id=session_id,
+                    device_id=int(device_id),
+                    protocol=protocol
+                )
 
             except Exception as error:
 
@@ -645,6 +637,240 @@ class SessionsWindow:
             command=dialog.destroy,
             width=18
         ).pack()
+
+    # ==========================================================
+    # REMOTE CONNECTION INTERFACE
+    # ==========================================================
+
+    def show_connection_window(self, session_id, device_id, protocol):
+        """
+        Display a connection-status interface for the authorized
+        remote session.
+
+        This interface represents the connection workflow. The actual
+        RDP/SSH/VPN connection should be launched through the
+        organization's approved remote-access client or gateway.
+        """
+
+        connection_window = tk.Toplevel(self.window)
+        connection_window.title("Remote Session - Connecting")
+        connection_window.geometry("650x520")
+        connection_window.resizable(False, False)
+        connection_window.transient(self.window)
+        connection_window.protocol(
+            "WM_DELETE_WINDOW",
+            connection_window.destroy
+        )
+
+        # -----------------------------
+        # Header
+        # -----------------------------
+        header = tk.Frame(
+            connection_window,
+            bg="#1f2937",
+            height=85
+        )
+        header.pack(fill="x")
+        header.pack_propagate(False)
+
+        tk.Label(
+            header,
+            text="REMOTE SESSION",
+            bg="#1f2937",
+            fg="white",
+            font=("Segoe UI", 20, "bold")
+        ).pack(pady=(12, 0))
+
+        tk.Label(
+            header,
+            text=f"Session #{session_id}  •  {protocol}",
+            bg="#1f2937",
+            fg="#d1d5db",
+            font=("Segoe UI", 10)
+        ).pack()
+
+        # -----------------------------
+        # Main content
+        # -----------------------------
+        content = tk.Frame(connection_window, bg="white")
+        content.pack(fill="both", expand=True, padx=35, pady=25)
+
+        tk.Label(
+            content,
+            text=f"Connecting to Device #{device_id}",
+            bg="white",
+            fg="#111827",
+            font=("Segoe UI", 17, "bold")
+        ).pack(pady=(0, 5))
+
+        tk.Label(
+            content,
+            text="Authorized remote-access connection",
+            bg="white",
+            fg="#6b7280",
+            font=("Segoe UI", 10)
+        ).pack(pady=(0, 20))
+
+        # -----------------------------
+        # Status card
+        # -----------------------------
+        status_card = tk.Frame(
+            content,
+            bg="#f3f4f6",
+            bd=1,
+            relief="solid"
+        )
+        status_card.pack(fill="x", pady=5)
+
+        status_label = tk.Label(
+            status_card,
+            text="●  INITIALIZING CONNECTION",
+            bg="#f3f4f6",
+            fg="#b45309",
+            font=("Segoe UI", 13, "bold")
+        )
+        status_label.pack(pady=(18, 5))
+
+        detail_label = tk.Label(
+            status_card,
+            text="Preparing authorized remote session...",
+            bg="#f3f4f6",
+            fg="#4b5563",
+            font=("Segoe UI", 10)
+        )
+        detail_label.pack(pady=(0, 18))
+
+        # -----------------------------
+        # Progress bar
+        # -----------------------------
+        progress = ttk.Progressbar(
+            content,
+            orient="horizontal",
+            length=570,
+            mode="determinate",
+            maximum=100
+        )
+        progress.pack(pady=(20, 8))
+
+        percentage_label = tk.Label(
+            content,
+            text="0%",
+            bg="white",
+            fg="#374151",
+            font=("Segoe UI", 10, "bold")
+        )
+        percentage_label.pack()
+
+        # -----------------------------
+        # Connection steps
+        # -----------------------------
+        steps_frame = tk.Frame(content, bg="white")
+        steps_frame.pack(fill="x", pady=20)
+
+        step_labels = []
+
+        steps = [
+            "Establishing secure connection",
+            "Authenticating authorized request",
+            "Verifying target device",
+            "Starting remote session"
+        ]
+
+        for step in steps:
+            label = tk.Label(
+                steps_frame,
+                text="○  " + step,
+                anchor="w",
+                bg="white",
+                fg="#6b7280",
+                font=("Segoe UI", 10)
+            )
+            label.pack(fill="x", pady=3)
+            step_labels.append(label)
+
+        # -----------------------------
+        # Footer
+        # -----------------------------
+        footer = tk.Frame(connection_window, bg="#f9fafb")
+        footer.pack(fill="x", side="bottom")
+
+        cancel_button = tk.Button(
+            footer,
+            text="Cancel Connection",
+            width=20,
+            font=("Segoe UI", 10, "bold"),
+            command=connection_window.destroy
+        )
+        cancel_button.pack(pady=15)
+
+        connection_window.update_idletasks()
+
+        # -----------------------------
+        # Connection animation
+        # -----------------------------
+        stages = [
+            (15, 0, "●  CONNECTING", "Establishing connection to the target device..."),
+            (35, 1, "●  AUTHENTICATING", "Checking the approved access request..."),
+            (60, 2, "●  VERIFYING DEVICE", "Verifying the target device and protocol..."),
+            (85, 3, "●  STARTING SESSION", "Preparing the authorized remote session..."),
+            (100, None, "●  SESSION READY", "Remote session is ready to be opened.")
+        ]
+
+        def update_stage(index=0):
+            if not connection_window.winfo_exists():
+                return
+
+            if index >= len(stages):
+                return
+
+            percent, active_step, status_text, detail_text = stages[index]
+
+            progress["value"] = percent
+            percentage_label.config(text=f"{percent}%")
+            status_label.config(text=status_text)
+            detail_label.config(text=detail_text)
+
+            for i, label in enumerate(step_labels):
+                if active_step is not None and i < active_step:
+                    label.config(
+                        text="✓  " + steps[i],
+                        fg="#15803d"
+                    )
+                elif active_step is not None and i == active_step:
+                    label.config(
+                        text="●  " + steps[i],
+                        fg="#b45309"
+                    )
+                elif percent == 100:
+                    label.config(
+                        text="✓  " + steps[i],
+                        fg="#15803d"
+                    )
+                else:
+                    label.config(
+                        text="○  " + steps[i],
+                        fg="#6b7280"
+                    )
+
+            if percent == 100:
+                status_label.config(fg="#15803d")
+                cancel_button.config(
+                    text="Close",
+                    command=connection_window.destroy
+                )
+
+                # Refresh the session table so the recorded STARTED
+                # session remains visible.
+                self.load_sessions()
+
+                return
+
+            connection_window.after(
+                1200,
+                lambda: update_stage(index + 1)
+            )
+
+        update_stage()
 
     # ==========================================================
     # END SESSION
