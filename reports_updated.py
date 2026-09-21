@@ -76,7 +76,7 @@ class ReportsWindow:
 
         tk.Label(
             header,
-            text="REMOTE ACCESS MANAGEMENT SYSTEM",
+            text="VIRTUAL SYSTEM ACCESS CONTROL",
             bg="#173b5c",
             fg="white",
             font=("Segoe UI", 20, "bold")
@@ -636,7 +636,7 @@ class ReportsWindow:
             # ======================================================
             worksheet.merge_cells("A1:C1")
             worksheet["A1"] = (
-                "REMOTE ACCESS MANAGEMENT SYSTEM"
+                "VIRTUAL SYSTEM ACCESS CONTROL"
             )
             worksheet["A1"].font = Font(
                 bold=True,

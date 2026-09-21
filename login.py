@@ -34,7 +34,7 @@ class Login(tk.Tk):
         # ========================================================
 
         self.title(
-            "Remote Access Management System"
+            "Virtual System Access Control"
         )
 
         self.geometry(
@@ -218,7 +218,7 @@ class Login(tk.Tk):
 
         tk.Label(
             login_panel,
-            text="REMOTE ACCESS MANAGEMENT SYSTEM",
+            text="VIRTUAL SYSTEM ACCESS CONTROL",
             bg=self.PANEL,
             fg=self.WHITE,
             font=("Segoe UI", 20, "bold")
@@ -551,8 +551,8 @@ class Login(tk.Tk):
         clients = [
             (80, 200, "ADMIN"),
             (80, 380, "TECHNICIAN"),
-            (410, 200, "DEVICE"),
-            (410, 380, "USER"),
+            (330, 200, "DEVICE"),
+            (330, 380, "USER"),
         ]
 
         for x, y, name in clients:
@@ -652,7 +652,7 @@ class Login(tk.Tk):
         canvas.create_text(
             45,
             570,
-            text="REMOTE ACCESS MANAGEMENT SYSTEM",
+            text="VIRTUAL SYSTEM ACCESS CONTROL",
             anchor="w",
             fill="#496176",
             font=("Segoe UI", 8, "bold")
