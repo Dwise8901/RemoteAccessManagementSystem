@@ -162,6 +162,7 @@ class Dashboard:
             ("◉", "Remote Sessions", self.open_sessions),
             ("▤", "Audit Logs", self.open_logs),
             ("▥", "Reports", self.open_reports),
+            ("🔐", "MFA Security", self.open_mfa),
         ]
 
         for icon, text, command in navigation:
@@ -1224,6 +1225,30 @@ class Dashboard:
                 "Reports",
                 f"Unable to open Reports:\n\n{error}"
             )
+
+    # ============================================================
+    # MFA SECURITY
+    # ============================================================
+
+    def open_mfa(self):
+
+        try:
+
+            from mfa_setup import MFASetupWindow
+
+            MFASetupWindow(
+                self.root,
+                self.user
+            )
+
+        except Exception as error:
+
+            messagebox.showerror(
+                "MFA Security",
+                f"Unable to open MFA Security:\n\n{error}",
+                parent=self.root
+            )
+
 
     # ============================================================
     # LOGOUT

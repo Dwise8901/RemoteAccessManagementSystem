@@ -1,22 +1,32 @@
 import bcrypt
+import pyotp
 
 
 def hash_password(password):
-    password_bytes = password.encode('utf-8')
-
-    hashed = bcrypt.hashpw(
-        password_bytes,
+    return bcrypt.hashpw(
+        password.encode("utf-8"),
         bcrypt.gensalt()
-    )
-
-    return hashed.decode('utf-8')
+    ).decode("utf-8")
 
 
 def verify_password(password, password_hash):
-    try:
-        return bcrypt.checkpw(
-            password.encode("utf-8"),
-            password_hash.encode("utf-8")
-        )
-    except Exception:
+    return bcrypt.checkpw(
+        password.encode("utf-8"),
+        password_hash.encode("utf-8")
+    )
+
+
+def generate_mfa_secret():
+    return pyotp.random_base32()
+
+
+def verify_mfa_code(secret, code):
+    if not secret:
         return False
+
+    totp = pyotp.TOTP(secret)
+
+    return totp.verify(
+        code,
+        valid_window=1
+    )
